@@ -167,11 +167,12 @@ const graves = new THREE.Group()
 scene.add(graves)
 const graveGeometry = new THREE.BoxBufferGeometry(.6,.8,.2)
 const graveMaterial = new THREE.MeshStandardMaterial({color: '#b2b6b1'})
-for(let i = 0; i <60;i++){
-    const angle = Math.random() * Math.PI *2
-    const radius = 3 + Math.random() * 6 
+
+for(let i = 0; i <80;i++){  
+    const angle = Math.random() * Math.PI *3
+    const radius = 3 + Math.random() * 8 
     const x = Math.cos(angle) * radius
-    const z = Math.sin(angle) * radius 
+    const z = Math.sin(angle) * radius
     const grave = new THREE.Mesh(graveGeometry,graveMaterial)
     grave.position.set(x,0.3,z)
     grave.rotation.z = (Math.random() - 0.5)*0.4
@@ -185,7 +186,7 @@ for(let i = 0; i <60;i++){
 
 // Floor
 const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(19, 19),
+    new THREE.PlaneGeometry(40, 40),
     new THREE.MeshStandardMaterial({ 
         map: grassColorTexture,
         aoMap: grassAmbientOcclusionTexture,
@@ -231,6 +232,7 @@ const ghost2 = new THREE.PointLight('#00ffff',2,3)
 scene.add(ghost2)
 const ghost3 = new THREE.PointLight('#ffff00',2,3)
 scene.add(ghost3)
+
 /**
  * Sizes
  */
@@ -258,13 +260,15 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(72, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(0, 4, 10)
 scene.add(camera)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
+controls.minPolarAngle = Math.PI / 6; 
+controls.maxPolarAngle = Math.PI / 2.5;
 controls.minDistance=3
 controls.maxDistance=11
 
@@ -290,7 +294,6 @@ ghost3.castShadow = true
 // bush3.castShadow = true
 // bush4.castShadow = true
 floor.receiveShadow = true
-
 // optimize
 // doorLight.shadow.mapSize.width = 256
 // doorLight.shadow.mapSize.height = 256
@@ -304,7 +307,8 @@ ghost2.shadow.camera.far = 7
 ghost3.shadow.mapSize.width = 256
 ghost3.shadow.mapSize.height = 256
 ghost3.shadow.camera.far = 7
-
+renderer.shadowMap.autoUpdate = false
+renderer.shadowMap.needsUpdate = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
