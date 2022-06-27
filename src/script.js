@@ -4,7 +4,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import * as ZapparThree from "@zappar/zappar-threejs";
+import { gsap } from 'gsap'
+
 /**
  * Base
  */
@@ -19,10 +20,36 @@ const scene = new THREE.Scene()
 
 //const dracoLoader = new DRACOLoader()
 //dracoLoader.setDecoderPath('/draco/')
-const manager1 = new ZapparThree.LoadingManager();
-let globalLoader = new ZapparThree.DefaultLoaderUI();
+
+const loadingBarElement = document.querySelector('.loading-bar')
+const loadingManager = new THREE.LoadingManager(
+    // Loaded
+    () =>
+    {
+        // Wait a little
+        window.setTimeout(() =>
+        {
+            // Animate overlay
+            gsap.to(overlayMaterial.uniforms.uAlpha, { duration: 3, value: 0, delay: 1 })
+
+            // Update loadingBarElement
+            loadingBarElement.classList.add('ended')
+            loadingBarElement.style.transform = ''
+     
+        }, 500)
+       
+    },
+
+    // Progress
+    (itemUrl, itemsLoaded, itemsTotal) =>
+    {
+        // Calculate the progress and update the loadingBarElement
+        const progressRatio = itemsLoaded / itemsTotal
+        loadingBarElement.style.transform = `scaleX(${progressRatio})`
+    }
+)
 // CREATE A COLLADALOADER INSTANCE
-var loaders = new ColladaLoader(manager1);
+var loaders = new ColladaLoader(loadingManager);
 // SETTING THE BASE RESOURCE URL FOR TEXTTURES
 loaders.setResourcePath('/models/');
 loaders.load(
@@ -43,6 +70,31 @@ loaders.load(
         scene.add(collada.scene)
     }
 )
+const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1)
+const overlayMaterial = new THREE.ShaderMaterial({
+    // wireframe: true,
+    transparent: true,
+    uniforms:
+    {
+        uAlpha: { value: 1 }
+    },
+    vertexShader: `
+        void main()
+        {
+            gl_Position = vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform float uAlpha;
+
+        void main()
+        {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, uAlpha);
+        }
+    `
+})
+const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial)
+scene.add(overlay)
 
 //fog
 const fog = new THREE.Fog('#262837',1,15)
@@ -79,7 +131,7 @@ loader.load( 'fonts/helvetiker_regular.typeface.json', ( font )=> {
 		font: font,
 		size: 0.6,
 		height: 0.2,
-		curveSegments: 5 ,
+		curveSegments: 8 ,
 		bevelEnabled: true,
 		bevelThickness: 0.03,
 		bevelSize: 0.02,
@@ -92,7 +144,7 @@ loader.load( 'fonts/helvetiker_regular.typeface.json', ( font )=> {
         + (textGeometry.boundingBox.max.y)*9,
         - (textGeometry.boundingBox.max.z)*0.5
     )
-    const material = new THREE.MeshStandardMaterial({})
+    const material = new THREE.MeshBasicMaterial({color: 'black'})
     const text = new THREE.Mesh(textGeometry, material)
     scene.add(text)
 });
